@@ -16,7 +16,7 @@
 ## Type your own license information
 ## Run the bellow code after opening freesurfer on Neurodesk 
 
-echo "armintoghi85@gmail.com
+echo "youremail@gmail.com
 > 76084
 >  *C17SbWQzy/zQ
 >  FStsUDPAW1CMs" >> ~/.license
