@@ -1,0 +1,117 @@
+## For IDS students, Neuroimaging department FreeSurfer Tutorial Part 1##
+## By Armin Toghi, Nov 2024
+
+## Quick notes: 
+## 1. We use Neurodesk for this tutorial
+## 2. Use version 7.3.2
+## 3. Be patient while working with freesurfer: you will probably get many error while you are working
+
+
+# Step 1: Adding License
+# ------------------------------------------------------------------
+# Follow this link for freesurfer license:
+# Link: https://surfer.nmr.mgh.harvard.edu/registration.html
+
+## Drag and drop your license to the home of Neurodesk 
+## Type your own license information
+## Run the bellow code after opening freesurfer on Neurodesk 
+
+echo "armintoghi85@gmail.com
+> 76084
+>  *C17SbWQzy/zQ
+>  FStsUDPAW1CMs" >> ~/.license
+export FS_LICENSE=~/license.txt
+
+
+# Step 2:  Create folder for freesurfer output
+# --------------------------------------------------------------------
+## Use the bellow code to creat a folder for freesurfer output
+
+mkdir /neurodesktop-storage/freesurfer-output
+source /opt/freesurfer-7.3.2/SetUpFreeSurfer.sh
+export SUBJECTS_DIR=/neurodesktop-storage/freesurfer-output #set the SUBJECTS_DIR variable to the directory where the data is stored
+
+
+# Step 3: Run Recon all
+--------------------------------------------------------------------
+## test-subject is the name of your output (it could be anything)
+## after -i you will direct your .nii file (you can use multiple subjects by simply repeating this step)
+## there are some extra options as well, for detail: check freesurfer wiki (-qcache or -3T)
+
+recon-all -subject test-subject -i /neurodesktop-storage/sub-319_ses-BL_T1w.nii -all
+
+## or recon-all -subject test-subject -i sub-01_ses-mri_acq-mprage_T1w.nii -all -qcache -3T
+## Important note: if recon-all existed with error you can run the bellow command to restart from the final
+## successful stage
+## recon-all -s test-subject -autorecon3
+## Or restart the entire process with:
+## recon-all -s test-subject -all
+
+
+
+# Step 4: Display Volumes
+--------------------------------------------------------------------
+## After finishing your results you could visualize volume by running this code on freesurfer terminal
+## Remmember: test-subject is the file where freesurfer outputs located
+
+cd <put the folder where outputs stored>
+
+freeview -v \
+test-subject/mri/T1.mgz \
+test-subject/mri/wm.mgz \
+test-subject/mri/brainmask.mgz \
+test-subject/mri/aseg.mgz:colormap=lut:opacity=0.2 \
+-f test-subject/surf/lh.white:edgecolor=blue \
+test-subject/surf/lh.pial:edgecolor=red \
+test-subject/surf/rh.white:edgecolor=blue \
+test-subject/surf/rh.pial:edgecolor=red
+
+# Step 4: Display Surfuces
+# --------------------------------------------------------------------
+## First close the freeview then start again
+
+cd <put the folder where outputs stored>
+freeview -f  test-subject/surf/lh.pial:annot=aparc.annot:name=pial_aparc:visible=0 \
+test-subject/surf/lh.pial:annot=aparc.a2009s.annot:name=pial_aparc_des:visible=0 \
+test-subject/surf/lh.inflated:overlay=lh.thickness:overlay_threshold=0.1,3::name=inflated_thickness:visible=0 \
+test-subject/surf/lh.inflated:visible=0 \
+test-subject/surf/lh.white:visible=0 \
+test-subject/surf/lh.pial \
+--viewport 3d
+
+# Step 5: Conver .mgz to .nii
+# --------------------------------------------------------------------
+
+mri_label2vol –seg ribbon.mgz –temp rawavg.mgz –o ribbon-in-rawavg.mgz –regheader
+ribbon.mgz
+mri_convert ribbon-in-rawavg.mgz ribbon-in-rawavg.nii
+mri_convert test-subject/mri/T1.mgz T1.nii
+mri_convert test-subject/mri/aparc+aseg.mgz aparc+aseg.nii
+
+# Step 6: check features
+# --------------------------------------------------------------------
+##if you are opening the freesurfer again, make sure to initialize the SUBJECTS_DIR
+
+source /opt/freesurfer-7.3.2/SetUpFreeSurfer.sh
+export SUBJECTS_DIR=/neurodesktop-storage/freesurfer-output
+
+#for segment 
+cd $SUBJECTS_DIR/test-subject/stats
+less aseg.stats
+
+#for parc
+cd $SUBJECTS_DIR/test-subject/stats
+less lh.aparc.stats
+
+# Step 7: for extracting features
+# --------------------------------------------------------------------
+
+#For segmentation: bellow code to extract sub-cortical features
+asegstats2table --subjects test-subject --common-segs --meas volume --stats=aseg.stats --table=segstats.txt
+
+#For Parcellation: bellow code extract volume, thickness and area 
+aparcstats2table --subjects test-subject --hemi lh --meas thickness --parc=aparc --tablefile=aparc.txt
+
+
+
+

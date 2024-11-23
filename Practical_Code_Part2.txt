@@ -1,0 +1,56 @@
+## For IDS students, Neuroimaging department FreeSurfer Tutorial Part 2##
+## By Armin Toghi, Nov 2024
+
+## Quick notes: 
+## 1. We use Neurodesk for this tutorial
+## 2. Use version 7.3.2 (or above)
+## 3. Be patient while working with freesurfer: you will probably get many error while you are working
+
+
+# Step 1: Initialize: Like the previous section you should mark SUBDIR
+# ------------------------------------------------------------------
+
+source /opt/freesurfer-7.3.2/SetUpFreeSurfer.sh
+export SUBJECTS_DIR=/neurodesktop-storage/freesurfer-output
+
+# Step 2: Examine a segmentation, parcellation, and color lookup table to understand how they are related
+# ------------------------------------------------------------------
+
+cd /home/jovyan/neurodesktop-storage/freesurfer-output
+freeview -v test-subject/mri/orig.mgz \
+test-subject/mri/aparc+aseg.mgz:colormap=lut:opacity=0.4 \
+-f test-subject/surf/lh.white:annot=aparc.annot
+
+#Note: The aparc+aseg.mgz file shows the parcellated cortical ribbon at the same time as the segmented subcortical structures.
+
+# Step 3: Register your label of interest to fsaverage
+# -------------------------------------------------------------------
+cd $SUBJECTS_DIR
+
+mri_label2label \
+  --srcsubject fsaverage \
+  --srclabel fsaverage/label/lh.BA45_exvivo.label \ 
+  --trgsubject test-subject \	
+  --trglabel test-subject/label/lh.BA45_exvivo.label \
+  --hemi lh \
+  --regmethod surface 
+
+#srclabel: the input label file from source subject
+#trglabel: output label file on target subject
+#regmethod: specify if you want the registration to occur on the surface or in the volume
+
+# Step 4: Visualizing your label on anat
+# -------------------------------------------------------------------
+
+freeview -v test-subject/mri/orig.mgz
+# File > Load ROI: load your label
+# go to this cordinate  [127,127,128] for lh.BA45_exvivo.label
+
+# Step 4: Visualizing your label on surface
+# -------------------------------------------------------------------
+
+freeview -f test-subject/surf/lh.inflated
+# On the left menu, click on the drop down menu next to 'Curvature' and select 'Off'. Next to 'Label', select 'Load'. 
+# In the window that pops up, navigate to the label directory if it is not already in it and select lh.BA45_exvivo.label. 
+# Hit 'Open'.
+
